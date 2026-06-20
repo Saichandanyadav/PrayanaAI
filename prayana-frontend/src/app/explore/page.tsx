@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Compass, Sparkles } from 'lucide-react';
+import Image from 'next/image';
+import { Sparkles } from 'lucide-react';
 
 const TOP_PLACES = [
   {
@@ -74,7 +75,13 @@ export default function ExplorePage() {
           <div key={idx} className="bg-white border border-slate-100 shadow-md rounded-2xl overflow-hidden flex flex-col justify-between">
             <div>
               <div className="relative h-48 bg-slate-100 flex items-center justify-center text-slate-400">
-                <img src={place.image} alt={place.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <Image 
+                  src={place.image} 
+                  alt={place.name} 
+                  fill
+                  sizes="(max-w-768px) 100vw, (max-w-1200px) 50vw, 33vw"
+                  className="object-cover" 
+                />
                 <span className="absolute text-xs font-semibold bg-black/40 text-white px-2 py-1 rounded bottom-3 left-3">Destination #{idx + 1}</span>
               </div>
               <div className="p-5">

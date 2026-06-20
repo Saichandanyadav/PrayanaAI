@@ -7,12 +7,11 @@ import { Compass, LayoutDashboard, Map, LogOut, Menu, X, AlertTriangle, Lightbul
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
-    setIsAuthenticated(!!localStorage.getItem('prayana_token'));
+    localStorage.getItem('prayana_token');
   }, [pathname]);
 
   const handleLogoutConfirm = () => {

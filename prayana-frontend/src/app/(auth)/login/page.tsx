@@ -7,8 +7,20 @@ import Image from 'next/image';
 import api from '@/lib/api';
 import { LogIn, ArrowRight, Compass } from 'lucide-react';
 
+interface LoginFormInputs {
+  [key: string]: string;
+}
+
+interface ApiErrorResponse {
+  response?: {
+    data?: {
+      error?: string;
+    };
+  };
+}
+
 export default function LoginPage() {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<LoginFormInputs>();
   const router = useRouter();
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,15 +32,16 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: LoginFormInputs) => {
     setLoading(true);
     setServerError('');
     try {
       const response = await api.post('/auth/login', data);
       localStorage.setItem('prayana_token', response.data.token);
       router.replace('/dashboard');
-    } catch (err: any) {
-      setServerError(err.response?.data?.error || 'Login failed. Please check your inputs.');
+    } catch (err) {
+      const error = err as ApiErrorResponse;
+      setServerError(error.response?.data?.error || 'Login failed. Please check your inputs.');
     } finally {
       setLoading(false);
     }

@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState, use } from 'react';
 import api from '@/lib/api';
-import { Trip, ItineraryDay } from '@/types';
+import { Trip } from '@/types';
 import jsPDF from 'jspdf';
-import { Download, MapPin, RefreshCw, Plane, Hotel, Coins, Star, Globe } from 'lucide-react';
+import { Download, MapPin, RefreshCw, Hotel, Coins, Star, Globe } from 'lucide-react';
 
 const CURRENCIES = {
   USD: { symbol: '$', rate: 1, label: 'USD ($)' },

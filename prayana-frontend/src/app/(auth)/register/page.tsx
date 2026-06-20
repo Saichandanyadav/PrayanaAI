@@ -7,8 +7,20 @@ import Image from 'next/image';
 import api from '@/lib/api';
 import { UserPlus, ArrowLeft, Compass } from 'lucide-react';
 
+interface RegisterFormInputs {
+  [key: string]: string;
+}
+
+interface ApiErrorResponse {
+  response?: {
+    data?: {
+      error?: string;
+    };
+  };
+}
+
 export default function RegisterPage() {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<RegisterFormInputs>();
   const router = useRouter();
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,15 +32,16 @@ export default function RegisterPage() {
     }
   }, [router]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: RegisterFormInputs) => {
     setLoading(true);
     setServerError('');
     try {
       const response = await api.post('/auth/register', data);
       localStorage.setItem('prayana_token', response.data.token);
       router.replace('/dashboard');
-    } catch (err: any) {
-      setServerError(err.response?.data?.error || 'Registration failed. Please try again.');
+    } catch (err) {
+      const error = err as ApiErrorResponse;
+      setServerError(error.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

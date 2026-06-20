@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, HelpCircle, MessageCircle, FileText, User, AlertCircle } from 'lucide-react';
+import { MessageSquare, X, HelpCircle, MessageCircle, FileText, User, AlertCircle, LucideProps } from 'lucide-react';
 
 interface PredefinedMessage {
   id: string;
   label: string;
   response: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<LucideProps>;
 }
 
 interface MessageItem {
@@ -136,7 +136,7 @@ export default function CustomerSupportChat() {
             </div>
             
             <div className="bg-[#0b3860] px-4 py-2 flex items-start gap-2 border-t border-white/5">
-              <AlertCircle className="w-3..5 h-3.5 text-[#38BDF8] flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-3.5 h-3.5 text-[#38BDF8] flex-shrink-0 mt-0.5" />
               <p className="text-[10px] text-slate-200 font-medium leading-normal">
                 These responses are not realtime they are static just added for realtime UI.
               </p>
