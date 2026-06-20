@@ -3,7 +3,7 @@ import { useEffect, useState, use } from 'react';
 import api from '@/lib/api';
 import { Trip } from '@/types';
 import jsPDF from 'jspdf';
-import { Download, MapPin, RefreshCw, Hotel, Coins, Star, Globe } from 'lucide-react';
+import { Download, MapPin, RefreshCw, Hotel, Coins, Star, Globe, Trash2, Edit2, Check, X, Plus } from 'lucide-react';
 
 const CURRENCIES = {
   USD: { symbol: '$', rate: 1, label: 'USD ($)' },
@@ -24,8 +24,11 @@ export default function TripDetailsPage({ params }: { params: Promise<{ id: stri
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [regenLoading, setRegenLoading] = useState<number | null>(null);
-  const [instructions, setInstructions] = useState<{ [key: number]: string }>({});
   const [currency, setCurrency] = useState<CurrencyKey>('USD');
+  const [newActivityText, setNewActivityText] = useState<{ [key: number]: string }>({});
+  const [editingTarget, setEditingTarget] = useState<{ day: number; index: number } | null>(null);
+  const [editingText, setEditingText] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ day: number; index: number } | null>(null);
 
   useEffect(() => {
     api.get(`/trips/${resolvedParams.id}`)
@@ -42,18 +45,69 @@ export default function TripDetailsPage({ params }: { params: Promise<{ id: stri
   };
 
   const handleRegenDay = async (dayNum: number) => {
+    const text = newActivityText[dayNum]?.trim() || '';
     setRegenLoading(dayNum);
     try {
       const response = await api.post(`/trips/${resolvedParams.id}/regenerate-day`, {
         day: dayNum,
-        specialInstructions: instructions[dayNum] || ''
+        specialInstructions: text
       });
       setTrip(response.data);
-      setInstructions(prev => ({ ...prev, [dayNum]: '' }));
+      setNewActivityText(prev => ({ ...prev, [dayNum]: '' }));
     } catch (err) {
       console.error(err);
     } finally {
       setRegenLoading(null);
+    }
+  };
+
+  const handleAddActivity = async (dayNum: number) => {
+    const text = newActivityText[dayNum]?.trim();
+    if (!text) return;
+    try {
+      const response = await api.post(`/trips/${resolvedParams.id}/activity`, {
+        day: dayNum,
+        activity: text
+      });
+      setTrip(response.data);
+      setNewActivityText(prev => ({ ...prev, [dayNum]: '' }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleStartEdit = (dayNum: number, idx: number, currentText: string) => {
+    setEditingTarget({ day: dayNum, index: idx });
+    setEditingText(currentText);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingTarget || !editingText.trim()) return;
+    try {
+      const response = await api.put(`/trips/${resolvedParams.id}/activity`, {
+        day: editingTarget.day,
+        activityIndex: editingTarget.index,
+        updatedActivity: editingText.trim()
+      });
+      setTrip(response.data);
+      setEditingTarget(null);
+      setEditingText('');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const confirmDeleteActivity = async () => {
+    if (!deleteTarget) return;
+    try {
+      const response = await api.delete(`/trips/${resolvedParams.id}/activity`, {
+        data: { day: deleteTarget.day, activityIndex: deleteTarget.index }
+      });
+      setTrip(response.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -239,26 +293,53 @@ export default function TripDetailsPage({ params }: { params: Promise<{ id: stri
         <div className="lg:col-span-2 space-y-6 order-2 lg:order-1">
           <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">Travel Itinerary Flow</h2>
           {trip.itinerary.map((item) => (
-            <div key={item.day} className="premium-card p-4 sm:p-6 bg-white">
+            <div key={item.day} className="premium-card p-4 sm:p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-50 pb-3 sm:pb-4 mb-3 sm:mb-4">
                 <h3 className="text-base sm:text-lg font-bold text-[#0F4C81]">Day {item.day} Activities</h3>
                 {regenLoading === item.day && <span className="text-xs font-semibold text-orange-500 animate-pulse">Updating day timeline...</span>}
               </div>
-              <ul className="space-y-3 pl-1 sm:pl-2">
-                {item.activities.map((act, index) => (
-                  <li key={index} className="text-xs sm:text-sm text-slate-600 flex items-start gap-2.5 sm:gap-3">
-                    <MapPin className="w-4 h-4 text-[#38BDF8] mt-0.5 flex-shrink-0" />
-                    <span className="leading-relaxed">{act}</span>
-                  </li>
-                ))}
-              </ul>
               
-              <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-50 flex flex-col sm:flex-row items-center gap-2">
-                <input type="text" placeholder="e.g. Add more outdoor exploration tours" value={instructions[item.day] || ''} onChange={(e) => setInstructions(prev => ({ ...prev, [item.day]: e.target.value }))} className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#0F4C81]" />
-                <button onClick={() => handleRegenDay(item.day)} disabled={regenLoading !== null} className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-lg text-xs whitespace-nowrap transition-all flex items-center justify-center gap-1">
-                  <RefreshCw className={`w-3 h-3 ${regenLoading === item.day ? 'animate-spin' : ''}`} />
-                  <span>Regenerate Day</span>
-                </button>
+              <ul className="space-y-3 pl-1 sm:pl-2 mb-6">
+                {item.activities.map((act, index) => {
+                  const isEditing = editingTarget?.day === item.day && editingTarget?.index === index;
+                  return (
+                    <li key={index} className="text-xs sm:text-sm text-slate-600 flex items-start justify-between gap-3 group bg-slate-50/50 hover:bg-slate-50 p-2.5 rounded-xl border border-transparent hover:border-slate-100 transition-all">
+                      <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
+                        <MapPin className="w-4 h-4 text-[#38BDF8] mt-0.5 flex-shrink-0" />
+                        {isEditing ? (
+                          <input type="text" value={editingText} onChange={(e) => setEditingText(e.target.value)} className="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:border-[#0F4C81] bg-white text-slate-800" />
+                        ) : (
+                          <span className="leading-relaxed break-words text-slate-700 font-medium">{act}</span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        {isEditing ? (
+                          <>
+                            <button onClick={handleSaveEdit} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"><Check className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => setEditingTarget(null)} className="p-1 text-slate-400 hover:bg-slate-100 rounded transition-colors"><X className="w-3.5 h-3.5" /></button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => handleStartEdit(item.day, index, act)} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => setDeleteTarget({ day: item.day, index })} className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                          </>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2 border-t border-slate-100 pt-4">
+                <input type="text" placeholder="Add custom activity or instructions to regenerate day..." value={newActivityText[item.day] || ''} onChange={(e) => setNewActivityText(prev => ({ ...prev, [item.day]: e.target.value }))} className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#0F4C81]" />
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+                  <button onClick={() => handleAddActivity(item.day)} className="bg-[#0F4C81] hover:bg-[#0c3e69] text-white p-2 rounded-lg text-xs transition-colors flex items-center justify-center gap-1 px-3 font-semibold h-9"><Plus className="w-3.5 h-3.5" /> Add</button>
+                  <button onClick={() => handleRegenDay(item.day)} disabled={regenLoading !== null} className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs whitespace-nowrap transition-all flex items-center justify-center gap-1 h-9">
+                    <RefreshCw className={`w-3 h-3 ${regenLoading === item.day ? 'animate-spin' : ''}`} />
+                    <span>Regenerate Day</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -298,22 +379,35 @@ export default function TripDetailsPage({ params }: { params: Promise<{ id: stri
             </div>
             <div className="space-y-4">
               {trip.hotels.map((hotel, idx) => (
-                <div key={idx} className="premium-card p-4 sm:p-5 bg-white">
-                  <div className="flex items-start justify-between mb-1.5 gap-2">
-                    <h4 className="font-bold text-slate-800 text-sm sm:text-base leading-tight">{hotel.name}</h4>
-                    <span className="text-[10px] sm:text-xs px-2 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded font-semibold whitespace-nowrap flex items-center gap-0.5">
-                      <span>{hotel.rating}</span>
-                      <Star className="w-2.5 h-2.5 sm:w-3 h-3 fill-emerald-600 stroke-none" />
-                    </span>
+                <div key={idx} className="premium-card p-4 sm:p-5 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                  <div className="flex justify-between items-start gap-2 mb-2">
+                    <h4 className="font-bold text-slate-800 text-sm sm:text-base">{hotel.name}</h4>
+                    <span className="flex items-center gap-0.5 text-xs text-amber-500 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-md font-bold shrink-0"><Star className="w-3 h-3 fill-amber-500" /> {hotel.rating}</span>
                   </div>
-                  <p className="text-[10px] sm:text-xs text-slate-400 font-bold tracking-wide uppercase mb-2">{hotel.category} • Budget {hotel.budgetLevel}</p>
-                  <p className="text-xs text-slate-600 leading-relaxed font-medium">{hotel.description}</p>
+                  <div className="flex gap-1.5 mb-2.5 flex-wrap">
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase tracking-wider">{hotel.category}</span>
+                    <span className="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded uppercase tracking-wider">{hotel.budgetLevel} Budget</span>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">{hotel.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
       </div>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl border border-slate-100 transform transition-all scale-100">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Delete Activity?</h3>
+            <p className="text-sm text-slate-500 mb-6 leading-relaxed">Are you sure you want to remove this activity from your itinerary? This cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">Cancel</button>
+              <button onClick={confirmDeleteActivity} className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

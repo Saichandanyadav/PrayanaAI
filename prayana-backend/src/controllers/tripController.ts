@@ -121,3 +121,81 @@ export const regenerateTripDay = async (req: CustomRequest, res: Response): Prom
     res.status(500).json({ error: error.message || 'Single node modification sequence broken.' });
   }
 };
+
+export const addActivity = async (req: CustomRequest, res: Response): Promise<void> => {
+  try {
+    const { day, activity } = req.body;
+    if (!day || !activity) {
+      res.status(400).json({ error: 'Missing required day or activity text parameters.' });
+      return;
+    }
+    const tripInstance = await Trip.findOne({ _id: req.params.id, userId: req.user?.id });
+    if (!tripInstance) {
+      res.status(404).json({ error: 'Target itinerary not found.' });
+      return;
+    }
+    const dayIndex = tripInstance.itinerary.findIndex((item) => item.day === Number(day));
+    if (dayIndex !== -1) {
+      tripInstance.itinerary[dayIndex].activities.push(activity);
+    } else {
+      tripInstance.itinerary.push({ day: Number(day), activities: [activity] });
+      tripInstance.itinerary.sort((a, b) => a.day - b.day);
+    }
+    await tripInstance.save();
+    res.json(tripInstance);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add custom activity record node.' });
+  }
+};
+
+export const updateActivity = async (req: CustomRequest, res: Response): Promise<void> => {
+  try {
+    const { day, activityIndex, updatedActivity } = req.body;
+    if (!day || activityIndex === undefined || !updatedActivity) {
+      res.status(400).json({ error: 'Missing target indices or text node updates.' });
+      return;
+    }
+    const tripInstance = await Trip.findOne({ _id: req.params.id, userId: req.user?.id });
+    if (!tripInstance) {
+      res.status(404).json({ error: 'Target itinerary not found.' });
+      return;
+    }
+    const dayIndex = tripInstance.itinerary.findIndex((item) => item.day === Number(day));
+    if (dayIndex !== -1 && tripInstance.itinerary[dayIndex].activities[activityIndex] !== undefined) {
+      tripInstance.itinerary[dayIndex].activities[activityIndex] = updatedActivity;
+      tripInstance.markModified('itinerary');
+      await tripInstance.save();
+      res.json(tripInstance);
+    } else {
+      res.status(404).json({ error: 'Target day index or activity element location not found.' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to modify activity string parameter node.' });
+  }
+};
+
+export const deleteActivity = async (req: CustomRequest, res: Response): Promise<void> => {
+  try {
+    const { day, activityIndex } = req.body;
+    if (!day || activityIndex === undefined) {
+      res.status(400).json({ error: 'Missing targeting indices parameters.' });
+      return;
+    }
+    const tripInstance = await Trip.findOne({ _id: req.params.id, userId: req.user?.id });
+    if (!tripInstance) {
+      res.status(404).json({ error: 'Target itinerary not found.' });
+      return;
+    }
+    const dayIndex = tripInstance.itinerary.findIndex((item) => item.day === Number(day));
+    if (dayIndex !== -1 && tripInstance.itinerary[dayIndex].activities[activityIndex] !== undefined) {
+      tripInstance.itinerary[dayIndex].activities.splice(activityIndex, 1);
+      tripInstance.markModified('itinerary');
+      await tripInstance.save();
+      res.json(tripInstance);
+    } else {
+      res.status(404).json({ error: 'Target data node coordinates missing inside layout.' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to erase activity item array position.' });
+  }
+};
