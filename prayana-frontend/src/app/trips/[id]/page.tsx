@@ -305,20 +305,20 @@ export default function TripDetailsPage({ params }: { params: Promise<{ id: stri
                   return (
                     <li key={index} className="text-xs sm:text-sm text-slate-600 flex items-start justify-between gap-3 group bg-slate-50/50 hover:bg-slate-50 p-2.5 rounded-xl border border-transparent hover:border-slate-100 transition-all">
                       <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
-                        <MapPin className="w-4 h-4 text-[#38BDF8] mt-0.5 flex-shrink-0" />
+                        <MapPin className="w-4 h-4 text-[#38BDF8] mt-1 flex-shrink-0" />
                         {isEditing ? (
-                          <input type="text" value={editingText} onChange={(e) => setEditingText(e.target.value)} className="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:border-[#0F4C81] bg-white text-slate-800" />
+                          <textarea value={editingText} onChange={(e) => setEditingText(e.target.value)} rows={3} className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-[#0F4C81] bg-white text-slate-800 resize-y min-h-[70px] leading-relaxed" />
                         ) : (
                           <span className="leading-relaxed break-words text-slate-700 font-medium">{act}</span>
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity shrink-0 pt-0.5">
                         {isEditing ? (
-                          <>
-                            <button onClick={handleSaveEdit} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"><Check className="w-3.5 h-3.5" /></button>
-                            <button onClick={() => setEditingTarget(null)} className="p-1 text-slate-400 hover:bg-slate-100 rounded transition-colors"><X className="w-3.5 h-3.5" /></button>
-                          </>
+                          <div className="flex flex-col gap-1">
+                            <button onClick={handleSaveEdit} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"><Check className="w-4 h-4" /></button>
+                            <button onClick={() => setEditingTarget(null)} className="p-1 text-slate-400 hover:bg-slate-100 rounded transition-colors"><X className="w-4 h-4" /></button>
+                          </div>
                         ) : (
                           <>
                             <button onClick={() => handleStartEdit(item.day, index, act)} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
