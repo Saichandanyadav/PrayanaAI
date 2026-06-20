@@ -10,13 +10,21 @@ The name **Prayana** comes from the Sanskrit word meaning **"journey"**, **"expe
 
 ## 🌍 Live Demo
 
-Frontend: [Add Deployment URL]
+### Frontend Application
 
-Backend API: [Add Backend URL]
+https://prayana-ai.vercel.app/
 
-Video Walkthrough: [Add Video Link]
+### Backend API
 
-GitHub Repository: [Add Repository Link]
+https://prayana-backend-4qc3.onrender.com/
+
+### GitHub Repository
+
+https://github.com/Saichandanyadav/PrayanaAI
+
+### Application Walkthrough Video
+
+(Add Video Link Here)
 
 ---
 
@@ -49,7 +57,7 @@ The application supports multiple users with strict data isolation and secure au
 * JWT Authentication
 * Password Hashing using bcryptjs
 * Protected Routes
-* Role-based Ownership Validation
+* Ownership-Based Authorization
 * Secure User Sessions
 
 ---
@@ -63,7 +71,7 @@ Generate personalized trips based on:
 * Budget Preference
 * Interests
 
-Example Interests:
+Supported interests include:
 
 * Food
 * Culture
@@ -143,7 +151,7 @@ Includes:
 
 ## Travel Tips
 
-A static resource section containing:
+A dedicated travel resource center containing:
 
 * Flight Booking Tips
 * Packing Advice
@@ -156,7 +164,7 @@ A static resource section containing:
 
 ## Travel Checklist
 
-Interactive travel checklist featuring:
+Interactive travel preparation checklist featuring:
 
 * Travel Documents
 * Electronics
@@ -165,7 +173,7 @@ Interactive travel checklist featuring:
 * Money & Payments
 * Before Leaving Home Checklist
 
-Checklist progress is stored in localStorage.
+Checklist progress is automatically stored using localStorage.
 
 ---
 
@@ -173,7 +181,7 @@ Checklist progress is stored in localStorage.
 
 ## Modern Explorer Theme
 
-Prayana AI is designed using a premium travel-tech aesthetic inspired by:
+Prayana AI follows a premium travel-tech design language inspired by:
 
 * Airbnb
 * Google Travel
@@ -186,37 +194,37 @@ Core Principles:
 * Simplicity
 * Trust
 * Accessibility
-* Modern UX
+* Modern User Experience
 
 ---
 
 ## Color Palette
 
-Primary:
+Primary
 
 ```txt
 #0F4C81
 ```
 
-Secondary:
+Secondary
 
 ```txt
 #38BDF8
 ```
 
-Accent:
+Accent
 
 ```txt
 #F97316
 ```
 
-Background:
+Background
 
 ```txt
 #F8FAFC
 ```
 
-Text:
+Text
 
 ```txt
 #1E293B
@@ -259,9 +267,9 @@ Text:
 * Google Gemini API
 * Direct REST API Integration
 * Dynamic Model Discovery
-* Structured JSON Responses
+* Structured JSON Response Parsing
 
-No LangChain was used in this project.
+**LangChain was intentionally not used to keep the architecture simple, lightweight, and maintainable.**
 
 ---
 
@@ -353,9 +361,11 @@ trip.userId === authenticatedUser.id
 
 This prevents users from:
 
-* Viewing other users' trips
-* Editing other users' trips
-* Deleting other users' trips
+* Viewing another user's trips
+* Editing another user's trips
+* Deleting another user's trips
+
+Every trip operation is ownership-validated before execution.
 
 ---
 
@@ -378,15 +388,18 @@ Google Gemini API
 Structured JSON
       │
       ▼
-Parse Response
+Validate & Parse JSON
       │
       ▼
 Store in MongoDB
+      │
+      ▼
+Return Response
 ```
 
 Generated Content:
 
-* Itinerary
+* Day-wise Itinerary
 * Budget Estimation
 * Hotel Recommendations
 
@@ -403,8 +416,6 @@ Generated Content:
   password: String
 }
 ```
-
----
 
 ## Trip
 
@@ -439,8 +450,6 @@ src/
 └── utils/
 ```
 
----
-
 ## Backend
 
 ```txt
@@ -466,17 +475,12 @@ src/
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
----
-
 ## Backend
 
 ```env
 PORT=5000
-
 MONGODB_URI=
-
 JWT_SECRET=
-
 GOOGLE_GEMINI_API_KEY=
 ```
 
@@ -487,10 +491,8 @@ GOOGLE_GEMINI_API_KEY=
 ## Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Saichandanyadav/PrayanaAI.git
 ```
-
----
 
 ## Frontend
 
@@ -501,8 +503,6 @@ npm install
 
 npm run dev
 ```
-
----
 
 ## Backend
 
@@ -520,26 +520,19 @@ npm run dev
 
 ## Frontend
 
-Deploy using:
+Deployed on Vercel:
 
-* Vercel
-
----
+https://prayana-ai.vercel.app/
 
 ## Backend
 
-Deploy using:
+Deployed on Render:
 
-* Render
-* Railway
-
----
+https://prayana-backend-4qc3.onrender.com/
 
 ## Database
 
-Use:
-
-* MongoDB Atlas
+MongoDB Atlas
 
 ---
 
@@ -547,59 +540,66 @@ Use:
 
 ### Why Next.js?
 
-* Modern React framework
-* Excellent developer experience
-* App Router support
-* Fast performance
+* Modern React Framework
+* App Router Architecture
+* Excellent Performance
+* Great Developer Experience
 
 ### Why MongoDB?
 
-* Flexible schema
-* Easy handling of AI-generated content
+* Flexible Schema Design
+* Suitable for AI-generated nested data structures
 
 ### Why Gemini API?
 
-* Fast responses
-* Cost-effective
-* Strong structured content generation
+* Fast response generation
+* Cost-effective API access
+* Excellent structured content generation
 
 ### Why Direct Gemini Integration Instead of LangChain?
 
-The project requires structured content generation rather than multi-agent orchestration. Direct Gemini integration reduces complexity while maintaining scalability and performance.
+The application requires structured itinerary generation rather than complex agent orchestration. Direct Gemini integration reduces dependencies, improves maintainability, and keeps the architecture simpler.
 
 ---
 
 # 🎯 Creative Feature
 
-### Travel Resource Center
+## Travel Resource Center
 
-Added two traveler-focused pages:
+Prayana AI includes two additional traveler-focused features:
 
-#### Travel Tips
+### Travel Tips
 
-Provides practical travel guidance.
+Provides practical guidance for:
 
-#### Travel Checklist
+* Flight bookings
+* Packing
+* Budget travel
+* Safety
+* International travel
+* Solo travel
 
-Interactive checklist with localStorage persistence.
+### Travel Checklist
 
-These features improve user preparedness before travel and make Prayana AI feel like a complete travel platform.
+Provides an interactive checklist with localStorage persistence, allowing travelers to track preparation progress before departure.
+
+These additions improve traveler preparedness and enhance the overall travel planning experience.
 
 ---
 
 # ⚠️ Known Limitations
 
-* Hotel recommendations are AI-generated and not connected to live hotel booking services.
-* Budget estimates are approximate and may vary.
+* Hotel recommendations are AI-generated and not connected to live hotel booking APIs.
+* Budget estimates are approximate and may vary based on season and location.
 * Flight pricing is not real-time.
-* Currency conversion is not integrated.
-* AI responses may occasionally require regeneration.
+* Currency conversion is not yet integrated.
+* AI-generated responses may occasionally require regeneration.
 
 ---
 
 # 👨‍💻 Author
 
-Sai Chandan
+**Sai Chandan**
 
 Full Stack Developer
 
@@ -609,6 +609,6 @@ Built as part of a Full Stack Developer Assessment.
 
 ## Thank You
 
-Thank you for reviewing Prayana AI.
+Thank you for reviewing **Prayana AI**.
 
-Plan Smarter. Journey Better. ✈️
+**Plan Smarter. Journey Better. ✈️**
