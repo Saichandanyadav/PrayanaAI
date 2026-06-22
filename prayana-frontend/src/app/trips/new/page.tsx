@@ -2,7 +2,12 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
-import { Utensils, Landmark, Compass, ShoppingBag, TreePine, Camera, Plane, Sparkles } from 'lucide-react';
+import { AxiosError } from 'axios';
+import { Utensils, Landmark, Compass, ShoppingBag, TreePine, Camera, Plane, Sparkles, AlertTriangle, X } from 'lucide-react';
+
+interface BackendErrorResponse {
+  error?: string;
+}
 
 const INTEREST_OPTIONS = [
   { label: 'Food', value: 'Food', icon: Utensils },
@@ -30,6 +35,7 @@ function NewTripForm() {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const destParam = searchParams.get('destination');
@@ -45,12 +51,13 @@ function NewTripForm() {
   const handleGenerate = async () => {
     if (!destination || selectedInterests.length === 0) return;
     setLoading(true);
+    setErrorMessage(null);
     const stepInterval = setInterval(() => {
       setLoadingStep(prev => (prev + 1) % LOADING_STEPS.length);
     }, 2200);
 
     try {
-      const response = await api.post('/trips', {
+      const response = await api.post<{ _id: string }>('/trips', {
         destination,
         numberOfDays: days,
         budgetType: budget,
@@ -59,9 +66,17 @@ function NewTripForm() {
       clearInterval(stepInterval);
       router.push(`/trips/${response.data._id}`);
     } catch (err) {
-      console.error(err);
       clearInterval(stepInterval);
       setLoading(false);
+      console.error(err);
+      
+      const axiosError = err as AxiosError<BackendErrorResponse>;
+      const remoteReason = axiosError.response?.data?.error;
+      if (typeof remoteReason === 'string') {
+        setErrorMessage(remoteReason);
+      } else {
+        setErrorMessage('An unexpected validation framework exception disrupted your itinerary compilation. Please verify your connection parameter footprints.');
+      }
     }
   };
 
@@ -89,6 +104,19 @@ function NewTripForm() {
 
       <div className="w-full max-w-5xl bg-white border border-slate-100 shadow-xl shadow-slate-100/50 rounded-2xl md:rounded-3xl p-4 sm:p-8 md:p-10 flex flex-col justify-between min-h-[500px] lg:min-h-[450px]">
         <div className="space-y-5 md:space-y-6">
+          {errorMessage && (
+            <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-start gap-3 relative transition-all animate-in fade-in duration-200">
+              <AlertTriangle className="w-5 h-5 text-rose-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1 pr-6">
+                <h4 className="text-sm font-bold text-rose-800">Generation Flow Pipeline Blocked</h4>
+                <p className="text-xs text-rose-600 mt-0.5 leading-relaxed font-medium">{errorMessage}</p>
+              </div>
+              <button type="button" onClick={() => setErrorMessage(null)} className="absolute top-3 right-3 text-rose-400 hover:text-rose-700 p-1 rounded-lg transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           <div>
             <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 md:text-sm">Where do you want to go?</label>
             <input type="text" placeholder="e.g. Tokyo, Paris, Iceland" value={destination} onChange={(e) => setDestination(e.target.value)} className="w-full px-4 sm:px-5 py-2.5 md:py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0F4C81] text-sm md:text-base font-medium bg-slate-50/40" />
